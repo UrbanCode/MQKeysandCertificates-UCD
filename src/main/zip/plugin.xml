@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+- Licensed Materials - Property of IBM Corp.
+- IBM UrbanCode Build
+- IBM UrbanCode Deploy
+- IBM UrbanCode Release
+- IBM AnthillPro
+- (c) Copyright IBM Corporation 2002, 2013. All Rights Reserved.
+-
+- U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
+- GSA ADP Schedule Contract with IBM Corp.
+-->
+<plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:server="http://www.urbancode.com/PluginServerXMLSchema_v1">
+  <header>
+    <identifier id="com.urbancode.air.plugin.MQ.Certificates" name="MQ Keys and Certificates" version="3"/>
+    	<description>
+			This plugin provides steps for the automation of operations concerning MQ Certificate databases.
+	 	</description>
+    <tag>Middleware/Messaging/WebSphereMQ/Keys and Certificates</tag>
+    <server:required-server-version>6.0.1.0</server:required-server-version>
+  </header>
+
+  <!--
+  ==================================================================================
+  Backup key DB files
+  -->
+
+  <step-type name="Backup key DB">
+    <description>Create a key database</description>
+    <properties>
+      <property name="queueManagerLocation" required="true">
+        <property-ui type="textBox" label="Queue manager location" default-value="${p:resource/queueManagerLocation}" description="The location of the queue manager"/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/uDeployRestClient.jar"/>
+      <arg file="classes/backupKeyDBFiles.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <!--
+  ==================================================================================
+  Create key database
+  -->
+
+  <step-type name="Create key DB">
+    <description>Create a key database</description>
+    <properties>
+      <property name="mqHome" required="true">
+        <property-ui type="textBox" label="MQ home location" default-value="${p:resource/mqHome}" description="The home location of MQ e.g. /opt/mqm"/>
+      </property>
+      <property name="keyDBLocation" required="true">
+        <property-ui type="textBox" label="Key DB location" default-value="${p:resource/keyDBLocation}" description="The location of the key database"/>
+      </property>
+      <property name="keyDBPassword" required="true">
+        <property-ui type="secureBox" label="Key DB password" default-value="${p:resource/keyDBPassword}" description="The password for the keystore" />
+      </property>
+      <property name="DBType" required="true">
+        <property-ui type="selectBox" label="DB type" default-value = "CMS" description="Format for the key database"/>
+        <value label="CMS">cms</value>
+        <value label="KDB">kdb</value>
+        <value label="PKCS 12">pkcs12</value>
+        <value label="P12">p12</value>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/uDeployRestClient.jar"/>
+      <arg file="classes/createKeyDB.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <!--
+  ==================================================================================
+  Create CSR from Key DB
+  -->
+
+  <step-type name="Create CSR from Key DB">
+    <description>Create a certificate signing request from the key database. Note that this assumes an integration with Venafi to get policy details.</description>
+    <properties>
+      <property name="mqHome" required="true">
+        <property-ui type="textBox" label="MQ home location" default-value="${p:resource/mqHome}" description="The home location of MQ e.g. /opt/mqm"/>
+      </property>
+      <property name="keyDBLocation" required="true">
+        <property-ui type="textBox" label="Key DB location" default-value="${p:resource/keyDBLocation}" description="The location of the key database"/>
+      </property>
+      <property name="keyDBPassword" required="true">
+        <property-ui type="secureBox" label="Key DB password" default-value="${p:resource/keyDBPassword}" description="The password for the keystore" />
+      </property>
+      <property name="csrLabel" required="true">
+        <property-ui type="textBox" label="CSR label" description="The label to describe the certificate" />
+      </property>
+      <property name="policyDetails" required="true">
+        <property-ui type="textBox" label="Policy details" description="JSON object containing the policy details taken from the 'policy' output property of the step called 'Get Venafi Policy'" />
+      </property>
+      <property name="certificateName" required="true">
+        <property-ui type="textBox" label="Certificate name" description="The name to associate with the certificate" />
+      </property>
+      <property name="csrFilename" required="true">
+        <property-ui type="textBox" label="CSR filename" description="The name of the file to hold the CSR" />
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/uDeployRestClient.jar"/>
+      <arg file="classes/createCSRFromKeyDB.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <!--
+  ==================================================================================
+  Add certificates to key database
+  -->
+
+  <step-type name="Add certs to Key DB">
+    <description>Add certificates from a certificate file to the key database. Used for the certificate chain.</description>
+    <properties>
+      <property name="mqHome" required="true">
+        <property-ui type="textBox" label="MQ home location" default-value="${p:resource/mqHome}" description="The home location of MQ e.g. /opt/mqm"/>
+      </property>
+      <property name="keyDBLocation" required="true">
+        <property-ui type="textBox" label="Key DB location" default-value="${p:resource/keyDBLocation}" description="The location of the key database"/>
+      </property>
+      <property name="keyDBPassword" required="true">
+        <property-ui type="secureBox" label="Key DB password" default-value="${p:resource/keyDBPassword}" description="The password for the keystore" />
+      </property>
+      <property name="certificateFile" required="true">
+        <property-ui type="textBox" label="Certificate file" description="The file containing the certificates" />
+      </property>
+      <property name="label" required="true">
+        <property-ui type="textBox" label="Label " default-value="Root and intermediate CA certificates" description="A label to describe the certificates" />
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/uDeployRestClient.jar"/>
+      <arg file="classes/addCertsToKeyDB.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <!--
+  ==================================================================================
+  Receive certificates into the key DB
+  -->
+
+  <step-type name="Receive certs to Key DB">
+    <description>Receive certificates from a certificate file to the key database. Must be certificates previously requested with the step 'Create CSR from Key DB'.</description>
+    <properties>
+      <property name="mqHome" required="true">
+        <property-ui type="textBox" label="MQ home location" default-value="${p:resource/mqHome}" description="The home location of MQ e.g. /opt/mqm"/>
+      </property>
+      <property name="keyDBLocation" required="true">
+        <property-ui type="textBox" label="Key DB location" default-value="${p:resource/keyDBLocation}" description="The location of the key database"/>
+      </property>
+      <property name="keyDBPassword" required="true">
+        <property-ui type="secureBox" label="Key DB password" default-value="${p:resource/keyDBPassword}" description="The password for the keystore" />
+      </property>
+      <property name="certificateFile" required="true">
+        <property-ui type="textBox" label="Certificate file" description="The file containing the certificates" />
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/uDeployRestClient.jar"/>
+      <arg file="classes/receiveCertificate.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <!--
+  ==================================================================================
+  List certificates in the key DB
+  -->
+
+  <step-type name="List certs in Key DB">
+    <description>List certificates in the key database. Option to include all details too.</description>
+    <properties>
+      <property name="mqHome" required="true">
+        <property-ui type="textBox" label="MQ home location" default-value="${p:resource/mqHome}" description="The home location of MQ e.g. /opt/mqm"/>
+      </property>
+      <property name="keyDBLocation" required="true">
+        <property-ui type="textBox" label="Key DB location" default-value="${p:resource/keyDBLocation}" description="The location of the key database"/>
+      </property>
+      <property name="keyDBPassword" required="true">
+        <property-ui type="secureBox" label="Key DB password" default-value="${p:resource/keyDBPassword}" description="The password for the keystore" />
+      </property>
+      <property name="type" required="true">
+        <property-ui type="selectBox" label="Type" default-value = "all" description="Format for the key database"/>
+        <value label="all">all</value>
+        <value label="personal">personal</value>
+        <value label="ca">ca</value>
+      </property>
+      <property name="details">
+        <property-ui type="checkBox" label="Include details" default-value = "true" description="Include the certificate details."/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/uDeployRestClient.jar"/>
+      <arg file="classes/listCertificates.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+ </plugin>
