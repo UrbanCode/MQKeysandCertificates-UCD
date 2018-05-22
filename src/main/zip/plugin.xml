@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-- Licensed Materials - Property of IBM Corp.
-- IBM UrbanCode Build
-- IBM UrbanCode Deploy
-- IBM UrbanCode Release
-- IBM AnthillPro
-- (c) Copyright IBM Corporation 2002, 2013. All Rights Reserved.
--
-- U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
-- GSA ADP Schedule Contract with IBM Corp.
+- (c) Copyright IBM Corporation 2017.
+- This is licensed under the following license.
+- The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
+- U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
 -->
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:server="http://www.urbancode.com/PluginServerXMLSchema_v1">
   <header>
@@ -26,7 +21,7 @@
   -->
 
   <step-type name="Backup key DB">
-    <description>Create a key database</description>
+    <description>Backup a key database.</description>
     <properties>
       <property name="queueManagerLocation" required="true">
         <property-ui type="textBox" label="Queue manager location" default-value="${p:resource/queueManagerLocation}" description="The location of the queue manager"/>
@@ -55,7 +50,7 @@
   -->
 
   <step-type name="Create key DB">
-    <description>Create a key database</description>
+    <description>Create a key database.</description>
     <properties>
       <property name="mqHome" required="true">
         <property-ui type="textBox" label="MQ home location" default-value="${p:resource/mqHome}" description="The home location of MQ e.g. /opt/mqm"/>
